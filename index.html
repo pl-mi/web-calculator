@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Проста веб-калькулятор — сума</title>
+  <style>
+    :root{font-family: system-ui,Segoe UI,Roboto,Arial;line-height:1.4}
+    body{display:flex;min-height:100vh;align-items:center;justify-content:center;background:#f3f4f6;margin:0;padding:20px}
+    .card{background:white;padding:24px;border-radius:12px;box-shadow:0 6px 22px rgba(15,23,42,0.08);width:360px;max-width:100%}
+    h1{font-size:18px;margin:0 0 12px}
+    label{display:block;font-size:13px;margin:8px 0 4px}
+    input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;font-size:15px}
+    .row{display:flex;gap:8px;margin-top:12px}
+    button{flex:1;padding:10px;border-radius:8px;border:0;font-weight:600;cursor:pointer}
+    button#calc{background:#0ea5a4;color:white}
+    button#clear{background:#e6e6e6}
+    .result{margin-top:14px;padding:12px;border-radius:8px;background:#fafafa;border:1px dashed #e5e7eb;min-height:44px;display:flex;align-items:center}
+    .error{color:#b91c1c;font-size:13px;margin-top:8px}
+    .hint{font-size:12px;color:#6b7280;margin-top:6px}
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>Проста веб-калькулятор — сума</h1>
+
+    <label for="a">Число A</label>
+    <input id="a" type="text" inputmode="decimal" placeholder="Наприклад: 12.34" aria-label="Число A">
+
+    <label for="b">Число B</label>
+    <input id="b" type="text" inputmode="decimal" placeholder="Наприклад: 5" aria-label="Число B">
+
+    <div class="row">
+      <button id="calc">Додати</button>
+      <button id="clear" type="button">Очистити</button>
+    </div>
+
+    <div id="result" class="result" aria-live="polite">Результат з'явиться тут</div>
+    <div id="error" class="error" role="alert" aria-hidden="true"></div>
+    <div class="hint">Підтримується десятковий роздільник "." або ",". Натисніть Enter у полі вводу для швидкого розрахунку.</div>
+  </main>
+
+  <script>
+    // Проста реалізація операції: додавання
+    const aInput = document.getElementById('a');
+    const bInput = document.getElementById('b');
+    const calcBtn = document.getElementById('calc');
+    const clearBtn = document.getElementById('clear');
+    const resultEl = document.getElementById('result');
+    const errorEl = document.getElementById('error');
+
+    function parseNumber(str) {
+      if (typeof str !== 'string') return NaN;
+      // Замінимо кому на крапку, прибираємо пробіли
+      const cleaned = str.trim().replace(/,/, '.');
+      if (cleaned === '') return NaN;
+      return Number(cleaned);
+    }
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.setAttribute('aria-hidden', 'false');
+      resultEl.textContent = '—';
+    }
+
+    function clearError() {
+      errorEl.textContent = '';
+      errorEl.setAttribute('aria-hidden', 'true');
+    }
+
+    function computeSum() {
+      clearError();
+      const a = parseNumber(aInput.value);
+      const b = parseNumber(bInput.value);
+      if (!isFinite(a) || !isFinite(b)) {
+        showError('Будь ласка, введіть коректні числа в обидва поля.');
+        return;
+      }
+      // Щоб уникнути проблем з плаваючою точкою, можна округлити результат до 12 знаків після коми
+      const raw = a + b;
+      const rounded = Math.round(raw * 1e12) / 1e12;
+      // Відобразимо як рядок, прибираючи зайві нулі
+      resultEl.textContent = String(rounded).replace(/\.0+$|(?<=\.[0-9]*?)0+$/,'');
+    }
+
+    calcBtn.addEventListener('click', computeSum);
+    clearBtn.addEventListener('click', () => {
+      aInput.value = '';
+      bInput.value = '';
+      resultEl.textContent = "Результат з'явиться тут";
+      clearError();
+      aInput.focus();
+    });
+
+    // Підтримка клавіші Enter у будь-якому полі вводу
+    [aInput, bInput].forEach(inp => {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          computeSum();
+        }
+      });
+    });
+
+    // Невелика зручність: вставка прикладу при подвійній кліці на результат
+    resultEl.addEventListener('dblclick', () => {
+      aInput.value = '1.5';
+      bInput.value = '2.25';
+      computeSum();
+    });
+  </script>
+</body>
+</html>
